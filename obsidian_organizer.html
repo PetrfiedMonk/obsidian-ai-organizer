@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obsidian Organizer — AI Edition</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #141417;
+    --surface2: #1c1c21;
+    --surface3: #242429;
+    --border: #2a2a32;
+    --accent: #7c5cfc;
+    --accent2: #5c8afc;
+    --accent-glow: rgba(124,92,252,0.25);
+    --text: #e8e8f0;
+    --text-muted: #6b6b80;
+    --text-dim: #3a3a48;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --error: #f87171;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,92,252,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,92,252,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* HEADER */
+  header {
+    margin-bottom: 48px;
+  }
+
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 8px;
+  }
+
+  .logo-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 0 20px var(--accent-glow);
+    flex-shrink: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: #3a3a48; }
+
+  .card-title {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title::before {
+    content: '';
+    display: block;
+    width: 4px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  /* FORM ELEMENTS */
+  label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  input[type="password"], input[type="text"], select, textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124,92,252,0.12);
+  }
+
+  select { cursor: pointer; }
+  select option { background: var(--surface2); }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group:last-child { margin-bottom: 0; }
+
+  .hint {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  .hint a { color: var(--accent); text-decoration: none; }
+  .hint a:hover { text-decoration: underline; }
+
+  /* TOGGLE SWITCHES */
+  .toggle-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .toggle-row:hover { border-color: var(--accent); }
+
+  .toggle-label {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--text);
+  }
+
+  .toggle-label small {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    margin-top: 2px;
+  }
+
+  .toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .slider {
+    position: absolute;
+    inset: 0;
+    background: var(--surface3);
+    border-radius: 20px;
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+
+  .slider::before {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    left: 3px;
+    top: 3px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+  }
+
+  .toggle input:checked + .slider { background: var(--accent); }
+  .toggle input:checked + .slider::before {
+    transform: translateX(16px);
+    background: white;
+  }
+
+  /* DROP ZONE */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    background: var(--surface2);
+  }
+
+  .drop-zone:hover, .drop-zone.over {
+    border-color: var(--accent);
+    background: rgba(124,92,252,0.05);
+  }
+
+  .drop-zone.over { transform: scale(1.01); }
+
+  .drop-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .drop-icon {
+    font-size: 2.8rem;
+    margin-bottom: 12px;
+  }
+
+  .drop-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .drop-sub {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  .format-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 20px;
+    justify-content: center;
+  }
+
+  .pill {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--surface3);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    letter-spacing: 0.06em;
+  }
+
+  /* FILE LIST */
+  #fileList { margin-top: 16px; }
+
+  .file-entry {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    transition: border-color 0.2s;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .file-entry.processing { border-color: var(--warning); }
+  .file-entry.done { border-color: var(--success); }
+  .file-entry.err { border-color: var(--error); }
+
+  .file-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+
+  .file-info { flex: 1; min-width: 0; }
+
+  .file-name {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .file-meta {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .file-status {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    padding: 3px 10px;
+    border-radius: 12px;
+  }
+
+  .file-status.queued { background: var(--surface3); color: var(--text-muted); }
+  .file-status.processing { background: rgba(251,191,36,0.12); color: var(--warning); }
+  .file-status.done { background: rgba(74,222,128,0.12); color: var(--success); }
+  .file-status.err { background: rgba(248,113,113,0.12); color: var(--error); }
+
+  .remove-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .remove-btn:hover { color: var(--error); }
+
+  /* BUTTONS */
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 0 20px rgba(124,92,252,0.3);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: #9070ff;
+    box-shadow: 0 0 28px rgba(124,92,252,0.45);
+    transform: translateY(-1px);
+  }
+
+  .btn-ghost {
+    background: var(--surface2);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    color: var(--text);
+    border-color: var(--accent);
+  }
+
+  .btn-success-style {
+    background: rgba(74,222,128,0.12);
+    color: var(--success);
+    border: 1px solid rgba(74,222,128,0.25);
+  }
+
+  .btn-success-style:hover:not(:disabled) {
+    background: rgba(74,222,128,0.2);
+  }
+
+  .btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* PROGRESS */
+  #progressCard { display: none; }
+
+  .progress-wrap {
+    position: relative;
+    height: 6px;
+    background: var(--surface3);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 6px;
+    transition: width 0.4s ease;
+    position: relative;
+  }
+
+  .progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  /* LOG */
+  .log {
+    background: #080809;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    line-height: 1.7;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .log-line { margin: 0; }
+  .log-line.ok { color: var(--success); }
+  .log-line.info { color: #63b3ed; }
+  .log-line.warn { color: var(--warning); }
+  .log-line.bad { color: var(--error); }
+  .log-line.dim { color: var(--text-dim); }
+
+  /* RESULTS */
+  #resultsCard { display: none; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .stat {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .stat-n {
+    font-size: 2rem;
+    font-weight: 800;
+    font-family: var(--mono);
+    color: var(--accent);
+  }
+
+  .stat-l {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* PREVIEW */
+  .preview-area {
+    display: none;
+    margin-top: 16px;
+  }
+
+  .preview-area.visible { display: block; }
+
+  .preview-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    max-width: 160px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tab-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .preview-content {
+    background: #080809;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    max-height: 260px;
+    overflow-y: auto;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    color: #c8d3f0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  /* Syntax colors in preview */
+  .preview-content .fm-key { color: #7dcfff; }
+  .preview-content .fm-val { color: #9ece6a; }
+  .preview-content .fm-tag { color: #bb9af7; }
+
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .btn-row { flex-direction: column; }
+    .btn { width: 100%; justify-content: center; }
+    h1 { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo-row">
+      <div class="logo-icon">🔮</div>
+      <h1>Obsidian <span>Organizer</span></h1>
+    </div>
+    <p class="subtitle">// AI-POWERED METADATA INJECTION — LOCAL EDITION</p>
+  </header>
+
+  <!-- API CONFIG -->
+  <div class="card">
+    <div class="card-title">API Configuration</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>AI Provider</label>
+        <select id="apiProvider">
+          <option value="anthropic">Anthropic (Claude) — Recommended</option>
+          <option value="openai">OpenAI (GPT-4o)</option>
+          <option value="google">Google (Gemini)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Model</label>
+        <select id="modelSelect">
+          <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+          <option value="claude-opus-4-5">Claude Opus 4.5</option>
+          <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (Fast)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>API Key</label>
+      <input type="password" id="apiKey" placeholder="sk-ant-…" autocomplete="off">
+      <p class="hint" id="apiHint">Get a key at <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com →</a></p>
+    </div>
+    <div class="form-group">
+      <label>Vault Topic / Context <span style="color:var(--text-dim)">(optional — helps AI tag more precisely)</span></label>
+      <input type="text" id="vaultContext" placeholder="e.g. security research, personal journal, software engineering notes...">
+    </div>
+  </div>
+
+  <!-- FILE UPLOAD -->
+  <div class="card">
+    <div class="card-title">Documents</div>
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" multiple accept=".txt,.md,.html,.htm,.rtf,.docx,.pdf,.csv,.json,.yaml,.yml">
+      <div class="drop-icon">📂</div>
+      <div class="drop-title">Drop files here or click to browse</div>
+      <div class="drop-sub">Supports TXT, MD, HTML, PDF, DOCX, CSV, JSON, YAML</div>
+      <div class="format-pills">
+        <span class="pill">TXT</span><span class="pill">MD</span>
+        <span class="pill">HTML</span><span class="pill">PDF</span>
+        <span class="pill">DOCX</span><span class="pill">CSV</span>
+        <span class="pill">JSON</span><span class="pill">YAML</span>
+      </div>
+    </div>
+    <div id="fileList"></div>
+  </div>
+
+  <!-- OPTIONS -->
+  <div class="card">
+    <div class="card-title">Processing Options</div>
+    <div class="toggle-list">
+      <label class="toggle-row" for="optSummary">
+        <div class="toggle-label">
+          Generate summary
+          <small>AI writes a 2-3 sentence tldr</small>
+        </div>
+        <div class="toggle"><input type="checkbox" id="optSummary" checked><span class="slider"></span></div>
+      </label>
+      <label class="toggle-row" for="optKeywords">
+        <div class="toggle-label">
+          Extract key topics
+          <small>Pulls main concepts and themes</small>
+        </div>
+        <div class="toggle"><input type="checkbox" id="optKeywords" checked><span class="slider"></span></div>
+      </label>
+      <label class="toggle-row" for="optTags">
+        <div class="toggle-label">
+          Generate Obsidian tags
+          <small>Adds #tags in frontmatter</small>
+        </div>
+        <div class="toggle"><input type="checkbox" id="optTags" checked><span class="slider"></span></div>
+      </label>
+      <label class="toggle-row" for="optSkipTagged">
+        <div class="toggle-label">
+          Skip already-tagged files
+          <small>Skips .md files that already have frontmatter</small>
+        </div>
+        <div class="toggle"><input type="checkbox" id="optSkipTagged" checked><span class="slider"></span></div>
+      </label>
+      <label class="toggle-row" for="optDate">
+        <div class="toggle-label">
+          Include created date
+          <small>Adds today's date to frontmatter</small>
+        </div>
+        <div class="toggle"><input type="checkbox" id="optDate" checked><span class="slider"></span></div>
+      </label>
+      <label class="toggle-row" for="optLinks">
+        <div class="toggle-label">
+          Suggest wikilinks
+          <small>AI suggests [[wiki link]] candidates</small>
+        </div>
+        <div class="toggle"><input type="checkbox" id="optLinks"><span class="slider"></span></div>
+      </label>
+    </div>
+    <div class="form-group" style="margin-top:16px">
+      <label>Tag style</label>
+      <select id="tagStyle">
+        <option value="kebab">kebab-case (recommended)</option>
+        <option value="lower">lowercase</option>
+        <option value="snake">snake_case</option>
+        <option value="title">TitleCase</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Concurrency (files processed at once)</label>
+      <select id="concurrency">
+        <option value="1">1 — safest (default)</option>
+        <option value="2">2 — faster</option>
+        <option value="3">3 — fastest</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="btn-row">
+    <button class="btn btn-primary" id="processBtn">▶ Start Processing</button>
+    <button class="btn btn-ghost" id="clearBtn">✕ Clear All</button>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="card" id="progressCard" style="margin-top:20px">
+    <div class="card-title">Progress</div>
+    <div class="progress-label">
+      <span id="progStatus">Initializing…</span>
+      <span id="progPct">0%</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar-fill" id="progBar" style="width:0%"></div>
+    </div>
+    <div class="log" id="log"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="stopBtn">⏹ Stop</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="card" id="resultsCard" style="margin-top:20px">
+    <div class="card-title">Complete</div>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-n" id="rTotal">0</div><div class="stat-l">Total</div></div>
+      <div class="stat"><div class="stat-n" id="rOk" style="color:var(--success)">0</div><div class="stat-l">Enhanced</div></div>
+      <div class="stat"><div class="stat-n" id="rSkip" style="color:var(--warning)">0</div><div class="stat-l">Skipped</div></div>
+      <div class="stat"><div class="stat-n" id="rErr" style="color:var(--error)">0</div><div class="stat-l">Errors</div></div>
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-area" id="previewArea">
+      <div class="card-title" style="margin-bottom:8px">Preview</div>
+      <div class="preview-tabs" id="previewTabs"></div>
+      <div class="preview-content" id="previewContent"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-success-style" id="downloadBtn">⬇ Download ZIP</button>
+      <button class="btn btn-ghost" id="resetBtn">↺ Process More</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- JSZip via CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const state = {
+  files: [],        // { file, id, name, status, result }
+  results: [],
+  running: false,
+  stopped: false,
+  idCounter: 0
+};
+
+// ─── DOM REFS ─────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const dropZone    = $('dropZone');
+const fileInput   = $('fileInput');
+const fileList    = $('fileList');
+const processBtn  = $('processBtn');
+const clearBtn    = $('clearBtn');
+const stopBtn     = $('stopBtn');
+const downloadBtn = $('downloadBtn');
+const resetBtn    = $('resetBtn');
+const progressCard = $('progressCard');
+const resultsCard  = $('resultsCard');
+const previewArea  = $('previewArea');
+const previewTabs  = $('previewTabs');
+const previewContent = $('previewContent');
+
+// ─── API PROVIDER HINTS ───────────────────────────────────────────────────────
+$('apiProvider').addEventListener('change', () => {
+  const v = $('apiProvider').value;
+  const hints = {
+    anthropic: { href:'https://console.anthropic.com/', text:'console.anthropic.com →', ph:'sk-ant-…' },
+    openai:    { href:'https://platform.openai.com/api-keys', text:'platform.openai.com →', ph:'sk-…' },
+    google:    { href:'https://aistudio.google.com/', text:'aistudio.google.com →', ph:'AIza…' }
+  };
+  const h = hints[v];
+  $('apiHint').innerHTML = `Get a key at <a href="${h.href}" target="_blank">${h.text}</a>`;
+  $('apiKey').placeholder = h.ph;
+
+  // Update model list
+  const models = {
+    anthropic: [
+      ['claude-sonnet-4-20250514','Claude Sonnet 4'],
+      ['claude-opus-4-5','Claude Opus 4.5'],
+      ['claude-haiku-4-5-20251001','Claude Haiku 4.5 (Fast)']
+    ],
+    openai: [
+      ['gpt-4o','GPT-4o'],
+      ['gpt-4o-mini','GPT-4o Mini (Fast)']
+    ],
+    google: [
+      ['gemini-2.0-flash','Gemini 2.0 Flash'],
+      ['gemini-1.5-pro','Gemini 1.5 Pro']
+    ]
+  };
+  const sel = $('modelSelect');
+  sel.innerHTML = models[v].map(([val,label]) => `<option value="${val}">${label}</option>`).join('');
+});
+
+// ─── DRAG & DROP ──────────────────────────────────────────────────────────────
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('over');
+  addFiles([...e.dataTransfer.files]);
+});
+fileInput.addEventListener('change', () => {
+  addFiles([...fileInput.files]);
+  fileInput.value = '';
+});
+
+// ─── FILE MANAGEMENT ──────────────────────────────────────────────────────────
+function addFiles(files) {
+  const allowed = ['.txt','.md','.html','.htm','.rtf','.pdf','.csv','.json','.yaml','.yml','.docx'];
+  files.forEach(f => {
+    const ext = '.' + f.name.split('.').pop().toLowerCase();
+    if (!allowed.includes(ext)) { log(`Skipped unsupported: ${f.name}`, 'warn'); return; }
+    const id = ++state.idCounter;
+    state.files.push({ file: f, id, name: f.name, status: 'queued', result: null });
+    renderFileEntry({ file: f, id, name: f.name, status: 'queued' });
+  });
+}
+
+function renderFileEntry(entry) {
+  const icons = { txt:'📄', md:'📝', html:'🌐', htm:'🌐', pdf:'📕', csv:'📊', json:'📦', yaml:'⚙️', yml:'⚙️', rtf:'📄', docx:'📘', default:'📄' };
+  const ext = entry.name.split('.').pop().toLowerCase();
+  const icon = icons[ext] || icons.default;
+  const kb = (entry.file.size / 1024).toFixed(1);
+  const el = document.createElement('div');
+  el.className = 'file-entry';
+  el.id = `fe-${entry.id}`;
+  el.innerHTML = `
+    <span class="file-icon">${icon}</span>
+    <div class="file-info">
+      <div class="file-name">${entry.name}</div>
+      <div class="file-meta">${kb} KB · ${ext.toUpperCase()}</div>
+    </div>
+    <span class="file-status queued" id="fs-${entry.id}">queued</span>
+    <button class="remove-btn" onclick="removeFile(${entry.id})">✕</button>
+  `;
+  fileList.appendChild(el);
+}
+
+function updateFileStatus(id, status, label) {
+  const el = $(`fe-${id}`);
+  const st = $(`fs-${id}`);
+  if (!el) return;
+  el.className = `file-entry ${status === 'processing' ? 'processing' : status === 'done' ? 'done' : status === 'error' ? 'err' : ''}`;
+  st.className = `file-status ${status === 'processing' ? 'processing' : status === 'done' ? 'done' : status === 'error' ? 'err' : 'queued'}`;
+  st.textContent = label || status;
+}
+
+function removeFile(id) {
+  state.files = state.files.filter(f => f.id !== id);
+  const el = $(`fe-${id}`);
+  if (el) el.remove();
+}
+
+clearBtn.addEventListener('click', () => {
+  state.files = [];
+  fileList.innerHTML = '';
+  $('log').innerHTML = '';
+  progressCard.style.display = 'none';
+  resultsCard.style.display = 'none';
+});
+
+// ─── LOG ──────────────────────────────────────────────────────────────────────
+function log(msg, type = 'info') {
+  const el = $('log');
+  const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
+  const p = document.createElement('p');
+  p.className = `log-line ${type === 'success' ? 'ok' : type === 'error' ? 'bad' : type === 'warn' ? 'warn' : type === 'dim' ? 'dim' : 'info'}`;
+  p.textContent = `[${ts}] ${msg}`;
+  el.appendChild(p);
+  el.scrollTop = el.scrollHeight;
+}
+
+// ─── TEXT EXTRACTION ──────────────────────────────────────────────────────────
+async function extractText(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  if (['txt','md','html','htm','csv','json','yaml','yml','rtf'].includes(ext)) {
+    const raw = await file.text();
+    if (ext === 'html' || ext === 'htm') {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(raw, 'text/html');
+      return doc.body.innerText.replace(/\s+/g, ' ').trim().slice(0, 6000);
+    }
+    return raw.slice(0, 6000);
+  }
+
+  if (ext === 'pdf') {
+    // Read as base64 for Claude vision or just extract what we can as binary text
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        // Try to extract readable text from raw PDF (best-effort for simple PDFs)
+        const buf = e.target.result;
+        const bytes = new Uint8Array(buf);
+        let text = '';
+        for (let i = 0; i < bytes.length; i++) {
+          const c = bytes[i];
+          if (c >= 32 && c < 127) text += String.fromCharCode(c);
+          else text += ' ';
+        }
+        // Extract text between BT/ET blocks (very basic PDF text extraction)
+        const matches = [...text.matchAll(/BT\s+([\s\S]*?)\s+ET/g)];
+        let extracted = matches.map(m => m[1].replace(/\(([^)]+)\)/g, '$1').replace(/[^\x20-\x7E]/g, ' ')).join(' ').replace(/\s+/g, ' ').trim();
+        if (extracted.length < 50) extracted = text.replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s+/g, ' ').trim();
+        resolve(('PDF: ' + extracted).slice(0, 5000));
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  if (ext === 'docx') {
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const buf = e.target.result;
+        const bytes = new Uint8Array(buf);
+        let text = '';
+        for (let i = 0; i < bytes.length; i++) {
+          const c = bytes[i];
+          if (c >= 32 && c < 127) text += String.fromCharCode(c);
+        }
+        const matches = [...text.matchAll(/<w:t[^>]*>([^<]+)<\/w:t>/g)];
+        let out = matches.map(m => m[1]).join(' ').replace(/\s+/g, ' ').trim();
+        if (out.length < 20) out = text.replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s+/g, ' ').trim();
+        resolve(out.slice(0, 5000));
+      };
+      reader.readAsBinaryString(file);
+    });
+  }
+
+  return await file.text().catch(() => '').then(t => t.slice(0, 5000));
+}
+
+// ─── AI CALL ──────────────────────────────────────────────────────────────────
+async function callAI(text, filename) {
+  const key      = $('apiKey').value.trim();
+  const provider = $('apiProvider').value;
+  const model    = $('modelSelect').value;
+  const context  = $('vaultContext').value.trim();
+  const tagStyle = $('tagStyle').value;
+
+  const doSummary  = $('optSummary').checked;
+  const doKeywords = $('optKeywords').checked;
+  const doTags     = $('optTags').checked;
+  const doLinks    = $('optLinks').checked;
+
+  const tagInstructions = {
+    kebab: 'tags in kebab-case (e.g. machine-learning, project-management)',
+    lower: 'tags in lowercase single words or short phrases',
+    snake: 'tags in snake_case (e.g. machine_learning)',
+    title: 'tags in TitleCase (e.g. MachineLearning)'
+  }[tagStyle];
+
+  const requested = [];
+  if (doSummary)  requested.push('- "summary": a concise 2-3 sentence summary of the content');
+  if (doKeywords) requested.push('- "keywords": array of 3-8 key topics or concepts');
+  if (doTags)     requested.push(`- "tags": array of 3-10 Obsidian-compatible ${tagInstructions}, no # prefix`);
+  if (doLinks)    requested.push('- "wikilinks": array of up to 5 suggested [[wikilink]] candidates as strings');
+
+  const systemPrompt = `You are an Obsidian vault organizer. Your job is to analyze document content and return structured metadata as valid JSON only. Return ONLY raw JSON with no markdown fences, no commentary, no extra text.${context ? ` The user's vault is focused on: ${context}.` : ''}`;
+
+  const userPrompt = `Analyze this document named "${filename}" and return a JSON object with these fields:
+${requested.join('\n')}
+${!doSummary ? '' : ''}
+Keep tags concise and Obsidian-friendly. If unsure, make reasonable inferences from the content.
+
+Document content:
+---
+${text.slice(0, 4000)}
+---`;
+
+  let response;
+
+  if (provider === 'anthropic') {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 800,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    response = data.content[0].text;
+
+  } else if (provider === 'openai') {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({
+        model,
+        max_tokens: 800,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    response = data.choices[0].message.content;
+
+  } else {
+    // Google Gemini
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ parts: [{ text: userPrompt }] }]
+        })
+      }
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    response = data.candidates[0].content.parts[0].text;
+  }
+
+  // Parse JSON
+  const cleaned = response.replace(/```json|```/g, '').trim();
+  return JSON.parse(cleaned);
+}
+
+// ─── FRONTMATTER BUILDER ──────────────────────────────────────────────────────
+function buildFrontmatter(meta, filename, existingFm) {
+  const lines = ['---'];
+  if ($('optDate').checked) {
+    lines.push(`created: ${new Date().toISOString().split('T')[0]}`);
+  }
+  lines.push(`source_file: "${filename}"`);
+  if (meta.tags?.length) {
+    lines.push(`tags:`);
+    meta.tags.forEach(t => lines.push(`  - ${t}`));
+  }
+  if (meta.keywords?.length) {
+    lines.push(`keywords: [${meta.keywords.map(k => `"${k}"`).join(', ')}]`);
+  }
+  if (meta.summary) {
+    lines.push(`summary: "${meta.summary.replace(/"/g, '\\"').replace(/\n/g, ' ')}"`);
+  }
+  if (meta.wikilinks?.length) {
+    lines.push(`related: [${meta.wikilinks.map(l => `"${l}"`).join(', ')}]`);
+  }
+  lines.push('---');
+  return lines.join('\n');
+}
+
+function injectFrontmatter(originalText, meta, filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  const fmRegex = /^---\n[\s\S]*?\n---\n?/;
+  const hasFm = fmRegex.test(originalText);
+
+  const fm = buildFrontmatter(meta, filename, hasFm ? originalText.match(fmRegex)?.[0] : '');
+
+  let body = originalText;
+  if (hasFm && $('optSkipTagged').checked) return null; // Signal to skip
+  if (hasFm) body = originalText.replace(fmRegex, '');
+
+  // For non-markdown files, wrap in markdown
+  if (!['md'].includes(ext)) {
+    return `${fm}\n\n# ${filename.replace(/\.[^.]+$/, '')}\n\n${body}`;
+  }
+  return `${fm}\n${body}`;
+}
+
+// ─── PROCESSING PIPELINE ──────────────────────────────────────────────────────
+stopBtn.addEventListener('click', () => { state.stopped = true; log('Stopping after current files…', 'warn'); });
+
+processBtn.addEventListener('click', async () => {
+  if (!$('apiKey').value.trim()) {
+    alert('Please enter an API key first.');
+    return;
+  }
+  if (state.files.length === 0) {
+    alert('No files added. Drop some files first.');
+    return;
+  }
+
+  state.running = true;
+  state.stopped = false;
+  state.results = [];
+
+  progressCard.style.display = 'block';
+  progressCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  resultsCard.style.display = 'none';
+  previewArea.classList.remove('visible');
+  processBtn.disabled = true;
+  $('log').innerHTML = '';
+
+  const concurrency = parseInt($('concurrency').value);
+  const queue = [...state.files];
+  let done = 0, ok = 0, skipped = 0, errors = 0;
+  const total = queue.length;
+
+  function updateProgress() {
+    const pct = Math.round((done / total) * 100);
+    $('progBar').style.width = pct + '%';
+    $('progPct').textContent = pct + '%';
+    $('progStatus').textContent = `Processing ${done}/${total}`;
+  }
+
+  async function processOne(entry) {
+    if (state.stopped) return;
+    updateFileStatus(entry.id, 'processing', '⟳');
+    log(`Processing: ${entry.name}`, 'info');
+
+    try {
+      const text = await extractText(entry.file);
+      if (!text || text.trim().length < 10) throw new Error('Could not extract readable text');
+
+      // Skip check
+      if ($('optSkipTagged').checked && entry.name.endsWith('.md') && text.startsWith('---')) {
+        updateFileStatus(entry.id, 'done', 'skipped');
+        log(`Skipped (already has frontmatter): ${entry.name}`, 'warn');
+        skipped++;
+        done++;
+        updateProgress();
+        return;
+      }
+
+      const meta = await callAI(text, entry.name);
+      const enhanced = injectFrontmatter(text, meta, entry.name);
+
+      if (enhanced === null) {
+        updateFileStatus(entry.id, 'done', 'skipped');
+        log(`Skipped: ${entry.name}`, 'warn');
+        skipped++;
+      } else {
+        const outName = entry.name.replace(/\.[^.]+$/, '') + '.md';
+        entry.result = { name: outName, content: enhanced, meta };
+        state.results.push(entry.result);
+        updateFileStatus(entry.id, 'done', '✓');
+        log(`Enhanced: ${entry.name} → ${outName}`, 'success');
+        ok++;
+      }
+    } catch (err) {
+      updateFileStatus(entry.id, 'error', 'err');
+      log(`Error on ${entry.name}: ${err.message}`, 'error');
+      errors++;
+    }
+
+    done++;
+    updateProgress();
+  }
+
+  // Concurrency pool
+  async function runPool() {
+    const running = [];
+    for (const entry of queue) {
+      if (state.stopped) break;
+      const p = processOne(entry).finally(() => running.splice(running.indexOf(p), 1));
+      running.push(p);
+      if (running.length >= concurrency) await Promise.race(running);
+    }
+    await Promise.all(running);
+  }
+
+  await runPool();
+
+  state.running = false;
+  processBtn.disabled = false;
+
+  // Show results
+  $('rTotal').textContent = total;
+  $('rOk').textContent = ok;
+  $('rSkip').textContent = skipped;
+  $('rErr').textContent = errors;
+  resultsCard.style.display = 'block';
+  resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  log(`Done. Enhanced: ${ok}, Skipped: ${skipped}, Errors: ${errors}`, 'success');
+
+  // Build preview tabs
+  if (state.results.length > 0) {
+    previewArea.classList.add('visible');
+    previewTabs.innerHTML = '';
+    state.results.slice(0, 10).forEach((r, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+      btn.textContent = r.name;
+      btn.onclick = () => {
+        [...previewTabs.children].forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        showPreview(r.content);
+      };
+      previewTabs.appendChild(btn);
+    });
+    showPreview(state.results[0].content);
+  }
+});
+
+function showPreview(content) {
+  previewContent.textContent = content;
+}
+
+// ─── DOWNLOAD ─────────────────────────────────────────────────────────────────
+downloadBtn.addEventListener('click', async () => {
+  if (state.results.length === 0) { alert('No results to download.'); return; }
+  downloadBtn.disabled = true;
+  downloadBtn.textContent = '⟳ Zipping…';
+
+  const zip = new JSZip();
+  const folder = zip.folder('obsidian-import');
+  state.results.forEach(r => folder.file(r.name, r.content));
+
+  const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `obsidian-import-${Date.now()}.zip`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  downloadBtn.disabled = false;
+  downloadBtn.textContent = '⬇ Download ZIP';
+});
+
+resetBtn.addEventListener('click', () => {
+  state.results = [];
+  state.files = [];
+  fileList.innerHTML = '';
+  $('log').innerHTML = '';
+  progressCard.style.display = 'none';
+  resultsCard.style.display = 'none';
+  previewArea.classList.remove('visible');
+});
+</script>
+</body>
+</html>
